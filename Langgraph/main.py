@@ -5,6 +5,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain.tools import tool
 from langchain.chat_models import init_chat_model
+from langgraph.checkpoint.mongodb import MongoDBSaver
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 import wikipedia
@@ -112,6 +113,12 @@ def toughQueryNode(state: State):
 
 # ------------------ GRAPH BUILDING ------------------
 
+#* Returns a compiled graph builder with a checkpointer
+def graphCompilerWithCheckpointer(checkpointer):
+    graph_with_checkpointer = graph_builder.compile(checkpointer=checkpointer)
+    return graph_with_checkpointer
+
+
 graph_builder = StateGraph(State)
 graph_builder.add_node("RoutingQuery", RoutingQuery)
 graph_builder.add_node("easyQueryNode", easyQueryNode)
@@ -132,12 +139,16 @@ graph_builder.add_conditional_edges(
 graph_builder.add_edge("easyQueryNode", END)
 graph_builder.add_edge("toughQueryNode", END)
 
-graph = graph_builder.compile()
+
 
 
 # ------------------ RUN LOOP ------------------
-def runChat(query):
-
+def runChat(query,thread_id):
+    query = input(">")
+    ConnectionString = "mongodb://admin:admin@mongodb:27017/"
+    config = {'configurable': {'thread_id': thread_id}}
+    with MongoDBSaver.from_conn_string(ConnectionString) as checkpointer:
+        graph = graphCompilerWithCheckpointer(checkpointer)
         SYSTEM_PROMPT = """“
         You are a concise assistant. Always answer in under 50 words.
 Only exceed 50 words if absolutely necessary for correctness or safety.
@@ -159,8 +170,9 @@ Assistant: AI lets computers learn patterns and make decisions like humans, ofte
         response = graph.invoke({
             "messages": [{'role': 'system', 'content': SYSTEM_PROMPT}
                 ,{"role": "user", "content": query},]
-        })
+        },config)
 
+   
         return response['messages'][-1].content
 
 

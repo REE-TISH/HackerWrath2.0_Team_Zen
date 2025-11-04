@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
+from datetime import timedelta
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,6 +54,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://sub.example.com",
     "http://localhost:8000",
     "http://127.0.0.1:9000",
+    "http://localhost:5173",
 ]
 
 ROOT_URLCONF = 'Sovi_Backend.urls'
@@ -78,10 +81,9 @@ WSGI_APPLICATION = 'Sovi_Backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
 
 
@@ -138,3 +140,11 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ]
 }
+
+SIMPLE_JWT = {
+        "ACCESS_TOKEN_LIFETIME": timedelta(days=1),  # Example: Access token valid for 60 minutes
+        "REFRESH_TOKEN_LIFETIME": timedelta(days=30),   # Example: Refresh token valid for 30 days
+        "ROTATE_REFRESH_TOKENS": True,                  # Optional: Rotate refresh tokens on use
+        "BLACKLIST_AFTER_ROTATION": True,               # Optional: Blacklist old refresh tokens
+        # ... other Simple JWT settings
+    }

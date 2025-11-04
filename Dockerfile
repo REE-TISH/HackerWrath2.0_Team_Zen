@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy Django project
 COPY . .
@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 8000
 
 # Run server using Gunicorn
-CMD ["gunicorn", "Sov_Backend.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "Sovi_Backend.wsgi:application", "--bind", "0.0.0.0:8000"]
